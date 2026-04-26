@@ -288,8 +288,8 @@ def flujo_agregar_empleado(mensaje):
             'NOMBRE': estado_empleado['nombre'],
             'AREA': estado_empleado['area'],
             'PUESTO': estado_empleado['puesto'],
-            'FECHA_INGRESO': estado_empleado['fecha_ingreso'],
-            'TIPO_CONTRATO': estado_empleado['tipo_contrato'],
+            'FECHA_DE_INGRESO': estado_empleado['fecha_ingreso'],
+            'TIPO DE CONTRATO': estado_empleado['tipo_contrato'],
             'VIGENCIA': estado_empleado['vigencia'],
             'NACIONALIDAD': estado_empleado['nacionalidad'],
             'SEXO': estado_empleado['sexo'],
@@ -297,7 +297,10 @@ def flujo_agregar_empleado(mensaje):
             'DOMICILIO': estado_empleado['domicilio']
         }
 
-        agregar_empleado(datos)
-        estado_empleado = {}
-
-        return personalidad_bagheera("✅ Empleado agregado correctamente")
+        try:
+            id_agregado = agregar_empleado(datos)
+            estado_empleado = {}
+            return personalidad_bagheera(f"✅ Empleado agregado correctamente con ID: {id_agregado}")
+        except Exception as e:
+            estado_empleado = {}
+            return personalidad_bagheera(f"❌ Error al agregar empleado: {str(e)}")

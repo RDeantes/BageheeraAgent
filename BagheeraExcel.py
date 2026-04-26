@@ -99,26 +99,38 @@ def obtener_proximo_id():
 # ➕ AGREGAR NUEVO EMPLEADO
 def agregar_empleado(empleado_data):
     """Agrega un nuevo empleado al Excel"""
-    df = pd.read_excel(RUTA)
-    df.columns = df.columns.str.strip().str.upper()
-    
-    # Obtener próximo ID
-    proximo_id = obtener_proximo_id()
-    empleado_data['ID'] = proximo_id
-    
-    # Crear una fila nueva con los datos
-    nueva_fila = pd.DataFrame([empleado_data])
-    
-    # Asegurar que las columnas coincidan
-    for col in df.columns:
-        if col not in nueva_fila.columns:
-            nueva_fila[col] = ""
-    
-    # Reordenar las columnas de la nueva fila igual al DataFrame original
-    nueva_fila = nueva_fila[df.columns]
-    
-    # Concatenar y guardar
-    df = pd.concat([df, nueva_fila], ignore_index=True)
-    df.to_excel(RUTA, index=False)
-    
-    return proximo_id
+    try:
+        df = pd.read_excel(RUTA)
+        df.columns = df.columns.str.strip().str.upper()
+
+        # Obtener próximo ID
+        proximo_id = obtener_proximo_id()
+        empleado_data['ID'] = proximo_id
+
+        # Crear una fila nueva con los datos
+        nueva_fila = pd.DataFrame([empleado_data])
+
+        # Asegurar que las columnas coincidan
+        for col in df.columns:
+            if col not in nueva_fila.columns:
+                nueva_fila[col] = ""
+
+        # Reordenar las columnas de la nueva fila igual al DataFrame original
+        nueva_fila = nueva_fila[df.columns]
+
+        # Concatenar y guardar
+        df = pd.concat([df, nueva_fila], ignore_index=True)
+        df.to_excel(RUTA, index=False)
+
+        # Verificar que se guardó correctamente
+        df_verif = pd.read_excel(RUTA)
+        if len(df_verif) == len(df):
+            print(f"✅ Empleado agregado con ID: {proximo_id}")
+            print(f"📊 Total empleados ahora: {len(df)}")
+            return proximo_id
+        else:
+            raise Exception("Error: El empleado no se guardó correctamente")
+
+    except Exception as e:
+        print(f"❌ ERROR al agregar empleado: {str(e)}")
+        raise e

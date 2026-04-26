@@ -17,12 +17,12 @@ TOKEN = "8614896779:AAEQTEffYyNIBN7OBnTij8qFfexqy_02aLQ"
 # 🎯 RESPONDER MENSAJES
 # =======================================================
 async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    mensaje_usuario = update.message.text
+    mensaje_usuario = update.message.text.upper()
 
     print("MENSAJE RECIBIDO:", mensaje_usuario)
 
     # 🔴 Si presiona ESC → rompe el ciclo y reinicia
-    if mensaje_usuario.upper() == "ESC":
+    if mensaje_usuario == "ESC":
         await update.message.reply_text("🔄 Reiniciando el proceso...")
         print("Reiniciando...")
         os.execv(sys.executable, ['python'] + sys.argv)

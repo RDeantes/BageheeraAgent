@@ -28,7 +28,7 @@ def personalidad_bagheera(respuesta):
 def procesar(mensaje):
     global estado_contrato, estado_empleado
 
-    mensaje = mensaje.lower().strip()
+    mensaje = mensaje.strip()
 
     # 🔥 PRIORIDAD: flujos activos
     if estado_contrato.get("activo"):
@@ -38,36 +38,36 @@ def procesar(mensaje):
         return flujo_agregar_empleado(mensaje)
 
     # VENCIDOS
-    if "vencido" in mensaje:
+    if "VENCIDO" in mensaje:
         return revisar_contratos_vencidos()
 
     # VACACIONES
-    if "vacacion" in mensaje:
+    if "VACACION" in mensaje:
         meses = {
-            "enero": "enero","febrero": "febrero","marzo": "marzo",
-            "abril": "abril","mayo": "mayo","junio": "junio",
-            "julio": "julio","agosto": "agosto","septiembre": "septiembre",
-            "octubre": "octubre","noviembre": "noviembre","diciembre": "diciembre"
+            "ENERO": "enero","FEBRERO": "febrero","MARZO": "marzo",
+            "ABRIL": "abril","MAYO": "mayo","JUNIO": "junio",
+            "JULIO": "julio","AGOSTO": "agosto","SEPTIEMBRE": "septiembre",
+            "OCTUBRE": "octubre","NOVIEMBRE": "noviembre","DICIEMBRE": "diciembre"
         }
 
         for mes_texto, mes_param in meses.items():
             if mes_texto in mensaje:
                 return revisar_vacaciones_por_mes(mes_param)
 
-        return personalidad_bagheera("Usa: vacaciones + mes")
+        return personalidad_bagheera("Usa: VACACIONES + MES")
 
     # NUEVO CONTRATO
-    if "nuevo contrato" in mensaje:
+    if "NUEVO CONTRATO" in mensaje:
         estado_contrato = {"activo": True}
-        return personalidad_bagheera("¿Qué tipo de contrato?\n(temporal / permanente)")
+        return personalidad_bagheera("¿Qué tipo de contrato?\n(TEMPORAL / PERMANENTE)")
 
     # AGREGAR EMPLEADO
-    if "agregar empleado" in mensaje:
+    if "AGREGAR EMPLEADO" in mensaje:
         proximo_id = obtener_proximo_id()
         estado_empleado = {"activo": True, "id": proximo_id, "paso": 1}
         return personalidad_bagheera(f"ID: {proximo_id}\n¿Nombre del empleado?")
 
-    return personalidad_bagheera("No entendí la orden.")
+    return personalidad_bagheera("NO ENTENDÍ LA ORDEN.")
 
 
 # =========================================================
@@ -78,23 +78,23 @@ def flujo_contrato(mensaje):
 
     # TIPO
     if "tipo" not in estado_contrato:
-        if "temporal" in mensaje:
+        if "TEMPORAL" in mensaje:
             estado_contrato["tipo"] = "TEMPORAL"
-        elif "permanente" in mensaje:
+        elif "PERMANENTE" in mensaje:
             estado_contrato["tipo"] = "PERMANENTE"
         else:
-            return personalidad_bagheera("Responde: temporal o permanente")
+            return personalidad_bagheera("Responde: TEMPORAL o PERMANENTE")
 
-        return personalidad_bagheera("¿Jornada completa o parcial?")
+        return personalidad_bagheera("¿Jornada COMPLETA o PARCIAL?")
 
     # JORNADA
     elif "jornada" not in estado_contrato:
-        estado_contrato["jornada"] = mensaje.upper()
-        return personalidad_bagheera("Duración del contrato:")
+        estado_contrato["jornada"] = mensaje
+        return personalidad_bagheera("Duración del contrato (ej: 3 MESES):")
 
     # DURACION
     elif "duracion" not in estado_contrato:
-        estado_contrato["duracion"] = mensaje.upper()
+        estado_contrato["duracion"] = mensaje
         return personalidad_bagheera("Fecha de inicio (YYYY-MM-DD):")
 
     # FECHA INICIO
@@ -109,7 +109,7 @@ def flujo_contrato(mensaje):
 
     # NOMBRE
     elif "nombre" not in estado_contrato:
-        estado_contrato["nombre"] = mensaje.upper()
+        estado_contrato["nombre"] = mensaje
 
         datos = estado_contrato.copy()
         estado_contrato = {}
@@ -127,16 +127,16 @@ def generar_contrato(datos):
     tipo = datos["tipo"].lower()
     jornada = datos["jornada"].lower()
 
-    if tipo == "temporal" and "completa" in jornada:
+    if tipo == "temporal" and "COMPLETA" in jornada:
         archivo = "CONTRATO FORMATO TEMPORAL.docx"
 
-    elif tipo == "temporal" and "parcial" in jornada:
+    elif tipo == "temporal" and "PARCIAL" in jornada:
         archivo = "CONTRATO FORMATO TEMPORAL Y PARCIAL.docx"
 
-    elif tipo == "permanente" and "completa" in jornada:
+    elif tipo == "permanente" and "COMPLETA" in jornada:
         archivo = "CONTRATO FORMATO TIEMPO INDETERMINADO.docx"
 
-    elif tipo == "permanente" and "parcial" in jornada:
+    elif tipo == "permanente" and "PARCIAL" in jornada:
         archivo = "CONTRATO FORMATO INDETERMINADO Y PARCIAL.docx"
 
     else:

@@ -131,13 +131,13 @@ def generar_contrato(datos):
         archivo = "CONTRATO FORMATO TEMPORAL.docx"
 
     elif tipo == "temporal" and "parcial" in jornada:
-        archivo = "CONTRATO FORMATO TEMPORAL PARCIAL.docx"
+        archivo = "CONTRATO FORMATO TEMPORAL Y PARCIAL.docx"
 
     elif tipo == "permanente" and "completa" in jornada:
         archivo = "CONTRATO FORMATO TIEMPO INDETERMINADO.docx"
 
     elif tipo == "permanente" and "parcial" in jornada:
-        archivo = "CONTRATO FORMATO INDETERMINADO PARCIAL.docx"
+        archivo = "CONTRATO FORMATO INDETERMINADO Y PARCIAL.docx"
 
     else:
         return personalidad_bagheera("❌ Error en tipo o jornada")

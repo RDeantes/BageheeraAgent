@@ -2,9 +2,14 @@ import os
 import subprocess
 from datetime import datetime
 from docx import Document
-from docx2pdf import convert
-from BagheeraExcel import contrato_desde_excel
-from BagheeraExcel import buscar_empleado, actualizar_vigencia, obtener_proximo_id, agregar_empleado
+
+from BagheeraExcel import (
+    contrato_desde_excel,
+    buscar_empleado,
+    actualizar_vigencia,
+    obtener_proximo_id,
+    agregar_empleado
+)
 
 # 🧠 MEMORIA GLOBAL
 estado_contrato = {}
@@ -18,86 +23,61 @@ def personalidad_bagheera(respuesta):
 
 
 # =========================================================
-# 🎯 PROCESAR MENSAJES (ROUTER)
+# 🎯 ROUTER
 # =========================================================
 def procesar(mensaje):
     global estado_contrato, estado_empleado
 
     mensaje = mensaje.lower().strip()
 
-    # 🔥 1. SI YA ESTAMOS EN FLUJO DE CONTRATO → CONTINUAR
+    # 🔥 PRIORIDAD: flujos activos
     if estado_contrato.get("activo"):
         return flujo_contrato(mensaje)
-    
-    # 🔥 2. SI YA ESTAMOS EN FLUJO DE EMPLEADO → CONTINUAR
+
     if estado_empleado.get("activo"):
         return flujo_agregar_empleado(mensaje)
-    
-    # =========================================================
-    # 1️⃣ VENCIDOS
-    # =========================================================
+
+    # VENCIDOS
     if "vencido" in mensaje:
         return revisar_contratos_vencidos()
 
-    # =========================================================
-    # 2️⃣ VACACIONES
-    # =========================================================
+    # VACACIONES
     if "vacacion" in mensaje:
-
         meses = {
-            "enero": "enero",
-            "febrero": "febrero",
-            "marzo": "marzo",
-            "abril": "abril",
-            "mayo": "mayo",
-            "junio": "junio",
-            "julio": "julio",
-            "agosto": "agosto",
-            "septiembre": "septiembre",
-            "octubre": "octubre",
-            "noviembre": "noviembre",
-            "diciembre": "diciembre"
+            "enero": "enero","febrero": "febrero","marzo": "marzo",
+            "abril": "abril","mayo": "mayo","junio": "junio",
+            "julio": "julio","agosto": "agosto","septiembre": "septiembre",
+            "octubre": "octubre","noviembre": "noviembre","diciembre": "diciembre"
         }
 
         for mes_texto, mes_param in meses.items():
             if mes_texto in mensaje:
                 return revisar_vacaciones_por_mes(mes_param)
 
-        return personalidad_bagheera("USA SIEMPRE EL FORMATO VACACIONES + EL MES A BUSCAR")
+        return personalidad_bagheera("Usa: vacaciones + mes")
 
-    # =========================================================
-    # 3️⃣ NUEVO CONTRATO (FLUJO MANUAL)
-    # =========================================================
+    # NUEVO CONTRATO
     if "nuevo contrato" in mensaje:
         estado_contrato = {"activo": True}
         return personalidad_bagheera("¿Qué tipo de contrato?\n(temporal / permanente)")
-    
-    # =========================================================
-    # 4️⃣ AGREGAR EMPLEADO (FLUJO INTERACTIVO)
-    # =========================================================
+
+    # AGREGAR EMPLEADO
     if "agregar empleado" in mensaje:
         proximo_id = obtener_proximo_id()
-        estado_empleado = {
-            "activo": True,
-            "id": proximo_id,
-            "paso": 1
-        }
-        return personalidad_bagheera(f"✅ Nuevo empleado #ID: {proximo_id}\n\n¿Nombre del empleado?")
+        estado_empleado = {"activo": True, "id": proximo_id, "paso": 1}
+        return personalidad_bagheera(f"ID: {proximo_id}\n¿Nombre del empleado?")
 
     return personalidad_bagheera("No entendí la orden.")
 
 
 # =========================================================
-# 🧠 FLUJO DE CONTRATO
+# 🧠 FLUJO CONTRATO
 # =========================================================
 def flujo_contrato(mensaje):
     global estado_contrato
 
-    mensaje = mensaje.lower().strip()
-
-    # 🔥 TIPO DE CONTRATO
+    # TIPO
     if "tipo" not in estado_contrato:
-
         if "temporal" in mensaje:
             estado_contrato["tipo"] = "TEMPORAL"
         elif "permanente" in mensaje:
@@ -105,23 +85,29 @@ def flujo_contrato(mensaje):
         else:
             return personalidad_bagheera("Responde: temporal o permanente")
 
-        return personalidad_bagheera("¿La jornada es parcial o completa?")
+        return personalidad_bagheera("¿Jornada completa o parcial?")
+
+    # JORNADA
     elif "jornada" not in estado_contrato:
         estado_contrato["jornada"] = mensaje.upper()
         return personalidad_bagheera("Duración del contrato:")
 
+    # DURACION
     elif "duracion" not in estado_contrato:
         estado_contrato["duracion"] = mensaje.upper()
         return personalidad_bagheera("Fecha de inicio (YYYY-MM-DD):")
 
+    # FECHA INICIO
     elif "fecha_inicio" not in estado_contrato:
-        estado_contrato["fecha_inicio"] = mensaje.upper()
+        estado_contrato["fecha_inicio"] = mensaje
         return personalidad_bagheera("Fecha de término (YYYY-MM-DD):")
 
+    # FECHA TERMINO
     elif "fecha_termino" not in estado_contrato:
-        estado_contrato["fecha_termino"] = mensaje.upper()
+        estado_contrato["fecha_termino"] = mensaje
         return personalidad_bagheera("Nombre del empleado:")
 
+    # NOMBRE
     elif "nombre" not in estado_contrato:
         estado_contrato["nombre"] = mensaje.upper()
 
@@ -129,10 +115,13 @@ def flujo_contrato(mensaje):
         estado_contrato = {}
 
         return generar_contrato_desde_excel(datos)
+
+
 # =========================================================
 # 📄 GENERAR CONTRATO
 # =========================================================
 def generar_contrato(datos):
+
     base_path = os.path.dirname(__file__)
 
     tipo = datos["tipo"].lower()
@@ -151,12 +140,12 @@ def generar_contrato(datos):
         archivo = "CONTRATO FORMATO INDETERMINADO PARCIAL.docx"
 
     else:
-        return personalidad_bagheera("❌ No entendí el tipo o la jornada")
+        return personalidad_bagheera("❌ Error en tipo o jornada")
 
     plantilla = os.path.join(base_path, archivo)
 
     if not os.path.exists(plantilla):
-        return personalidad_bagheera(f"❌ No encontré la plantilla: {archivo}")
+        return personalidad_bagheera(f"❌ No encontré plantilla: {archivo}")
 
     doc = Document(plantilla)
 
@@ -170,169 +159,145 @@ def generar_contrato(datos):
         "{{curp}}": datos.get("curp", ""),
         "{{domicilio}}": datos.get("domicilio", ""),
         "{{puesto}}": datos.get("puesto", ""),
-        "{{dias}}": datos.get("dias", "")
+        "{{dias}}": datos.get("dias", "LUNES A SABADO")
     }
 
     for p in doc.paragraphs:
-        for key, value in reemplazos.items():
+        for key, val in reemplazos.items():
             if key in p.text:
-                p.text = p.text.replace(key, str(value))
+                p.text = p.text.replace(key, str(val))
 
+    # 🔥 GUARDAR DOCX
     nombre_archivo = f"Contrato_{datos['nombre'].replace(' ', '_')}.docx"
-    ruta_salida = os.path.join(base_path, nombre_archivo)
-    doc.save(ruta_salida)
+    ruta_docx = os.path.join(base_path, nombre_archivo)
+    doc.save(ruta_docx)
 
-    # 🔥 PDF
-    ruta_pdf = ruta_salida.replace(".docx", ".pdf")
-    convert(ruta_salida, ruta_pdf)
+    # 🔥 CONVERTIR A PDF (LIBREOFFICE)
+    ruta_pdf = ruta_docx.replace(".docx", ".pdf")
+
+    subprocess.run([
+        "soffice",
+        "--headless",
+        "--convert-to", "pdf",
+        "--outdir", base_path,
+        ruta_docx
+    ])
 
     return ruta_pdf
 
 
 # =========================================================
-# 📄 CONTRATOS VENCIDOS
+# 📄 DESDE EXCEL
+# =========================================================
+def generar_contrato_desde_excel(datos):
+
+    persona = buscar_empleado(datos["nombre"])
+
+    if persona is None:
+        return personalidad_bagheera("❌ No encontré al empleado")
+
+    datos_finales = {
+        **datos,
+        "nombre": persona["NOMBRE"],
+        "nacionalidad": persona.get("NACIONALIDAD", ""),
+        "sexo": persona.get("SEXO", ""),
+        "curp": persona.get("CURP", ""),
+        "domicilio": persona.get("DOMICILIO", ""),
+        "puesto": persona.get("PUESTO", "")
+    }
+
+    pdf = generar_contrato(datos_finales)
+
+    # 🔥 ACTUALIZA BIEN EL EXCEL
+    actualizar_vigencia(persona["NOMBRE"], datos["fecha_termino"])
+
+    return pdf
+
+
+# =========================================================
+# 📊 VENCIDOS
 # =========================================================
 def revisar_contratos_vencidos():
-    resultado = subprocess.run(['python', 'LeeArchivo.py'], capture_output=True, text=True)
-
-    if resultado.returncode == 0:
-        return personalidad_bagheera(resultado.stdout)
-    else:
-        return personalidad_bagheera(f"Error: {resultado.stderr}")
+    res = subprocess.run(['python', 'LeeArchivo.py'], capture_output=True, text=True)
+    return personalidad_bagheera(res.stdout)
 
 
 # =========================================================
 # 🌴 VACACIONES
 # =========================================================
 def revisar_vacaciones_por_mes(mes):
-    resultado = subprocess.run(['python', 'RevisarVacaciones.py', mes], capture_output=True, text=True)
-
-    if resultado.returncode == 0:
-        return personalidad_bagheera(resultado.stdout)
-    else:
-        return personalidad_bagheera(f"Error: {resultado.stderr}")
-    
-    
-def generar_contrato_desde_excel(datos):
-
-    persona = buscar_empleado(datos["nombre"])
-
-    if persona is None:
-        return personalidad_bagheera("❌ No encontré al empleado en el Excel")
-
-    datos_finales = {
-        "tipo": datos["tipo"],
-        "jornada": datos["jornada"],
-        "duracion": datos["duracion"],
-        "fecha_inicio": datos["fecha_inicio"],
-        "fecha_termino": datos["fecha_termino"],
-        "nombre": persona['NOMBRE'],
-        "nacionalidad": persona.get('NACIONALIDAD', 'MEXICANA'),
-        "sexo": persona.get('SEXO', 'M'),
-        "curp": persona.get('CURP', ''),
-        "domicilio": persona.get('DOMICILIO', ''),
-        "puesto": persona.get('PUESTO', 'EMPLEADO'),
-        "dias": "LUNES A SABADO"
-    }
-
-    pdf = generar_contrato(datos_finales)
-
-    # 🔥 ACTUALIZA EXCEL
-    actualizar_vigencia(datos["nombre"], datos["fecha_termino"])
-
-    return pdf
+    res = subprocess.run(['python', 'RevisarVacaciones.py', mes], capture_output=True, text=True)
+    return personalidad_bagheera(res.stdout)
 
 
 # =========================================================
-# 👤 FLUJO AGREGAR EMPLEADO
+# 👤 AGREGAR EMPLEADO
 # =========================================================
 def flujo_agregar_empleado(mensaje):
     global estado_empleado
-    
-    mensaje = mensaje.strip()
-    
-    # Paso 1: Nombre
-    if estado_empleado.get("paso") == 1:
+
+    if estado_empleado["paso"] == 1:
         estado_empleado["nombre"] = mensaje
         estado_empleado["paso"] = 2
-        return personalidad_bagheera("¿Área del empleado?")
-    
-    # Paso 2: Área
-    elif estado_empleado.get("paso") == 2:
+        return personalidad_bagheera("Área:")
+
+    elif estado_empleado["paso"] == 2:
         estado_empleado["area"] = mensaje
         estado_empleado["paso"] = 3
-        return personalidad_bagheera("¿Puesto del empleado?")
-    
-    # Paso 3: Puesto
-    elif estado_empleado.get("paso") == 3:
+        return personalidad_bagheera("Puesto:")
+
+    elif estado_empleado["paso"] == 3:
         estado_empleado["puesto"] = mensaje
         estado_empleado["paso"] = 4
-        return personalidad_bagheera("¿Fecha de ingreso? (YYYY-MM-DD)")
-    
-    # Paso 4: Fecha de ingreso
-    elif estado_empleado.get("paso") == 4:
+        return personalidad_bagheera("Fecha ingreso (YYYY-MM-DD):")
+
+    elif estado_empleado["paso"] == 4:
         estado_empleado["fecha_ingreso"] = mensaje
         estado_empleado["paso"] = 5
-        return personalidad_bagheera("¿Tipo de contrato? (temporal / permanente)")
-    
-    # Paso 5: Tipo de contrato
-    elif estado_empleado.get("paso") == 5:
+        return personalidad_bagheera("Tipo contrato:")
+
+    elif estado_empleado["paso"] == 5:
         estado_empleado["tipo_contrato"] = mensaje
         estado_empleado["paso"] = 6
-        return personalidad_bagheera("¿Vigencia del contrato? (YYYY-MM-DD)")
-    
-    # Paso 6: Vigencia
-    elif estado_empleado.get("paso") == 6:
+        return personalidad_bagheera("Vigencia:")
+
+    elif estado_empleado["paso"] == 6:
         estado_empleado["vigencia"] = mensaje
         estado_empleado["paso"] = 7
-        return personalidad_bagheera("¿Nacionalidad?")
-    
-    # Paso 7: Nacionalidad
-    elif estado_empleado.get("paso") == 7:
+        return personalidad_bagheera("Nacionalidad:")
+
+    elif estado_empleado["paso"] == 7:
         estado_empleado["nacionalidad"] = mensaje
         estado_empleado["paso"] = 8
-        return personalidad_bagheera("¿Sexo? (M / F)")
-    
-    # Paso 8: Sexo
-    elif estado_empleado.get("paso") == 8:
+        return personalidad_bagheera("Sexo:")
+
+    elif estado_empleado["paso"] == 8:
         estado_empleado["sexo"] = mensaje
         estado_empleado["paso"] = 9
-        return personalidad_bagheera("¿CURP?")
-    
-    # Paso 9: CURP
-    elif estado_empleado.get("paso") == 9:
+        return personalidad_bagheera("CURP:")
+
+    elif estado_empleado["paso"] == 9:
         estado_empleado["curp"] = mensaje
         estado_empleado["paso"] = 10
-        return personalidad_bagheera("¿Domicilio?")
-    
-    # Paso 10: Domicilio
-    elif estado_empleado.get("paso") == 10:
+        return personalidad_bagheera("Domicilio:")
+
+    elif estado_empleado["paso"] == 10:
         estado_empleado["domicilio"] = mensaje
-        
-        # Guardar en Excel
-        try:
-            datos_a_guardar = {
-                'NOMBRE': estado_empleado.get('nombre', ''),
-                'AREA': estado_empleado.get('area', ''),
-                'PUESTO': estado_empleado.get('puesto', ''),
-                'FECHA_INGRESO': estado_empleado.get('fecha_ingreso', ''),
-                'TIPO_CONTRATO': estado_empleado.get('tipo_contrato', ''),
-                'VIGENCIA': estado_empleado.get('vigencia', ''),
-                'NACIONALIDAD': estado_empleado.get('nacionalidad', ''),
-                'SEXO': estado_empleado.get('sexo', ''),
-                'CURP': estado_empleado.get('curp', ''),
-                'DOMICILIO': estado_empleado.get('domicilio', '')
-            }
-            
-            id_empleado = agregar_empleado(datos_a_guardar)
-            
-            # Limpiar estado
-            estado_empleado = {}
-            
-            return personalidad_bagheera(f"✅ ¡Empleado agregado exitosamente!\n📋 ID: {id_empleado}\n👤 Nombre: {datos_a_guardar['NOMBRE']}\n📁 Puesto: {datos_a_guardar['PUESTO']}")
-        
-        except Exception as e:
-            estado_empleado = {}
-            return personalidad_bagheera(f"❌ Error al guardar el empleado: {str(e)}")
-    
-    return personalidad_bagheera("❌ Ocurrió un error en el flujo")
+
+        datos = {
+            'NOMBRE': estado_empleado['nombre'],
+            'AREA': estado_empleado['area'],
+            'PUESTO': estado_empleado['puesto'],
+            'FECHA_INGRESO': estado_empleado['fecha_ingreso'],
+            'TIPO_CONTRATO': estado_empleado['tipo_contrato'],
+            'VIGENCIA': estado_empleado['vigencia'],
+            'NACIONALIDAD': estado_empleado['nacionalidad'],
+            'SEXO': estado_empleado['sexo'],
+            'CURP': estado_empleado['curp'],
+            'DOMICILIO': estado_empleado['domicilio']
+        }
+
+        agregar_empleado(datos)
+        estado_empleado = {}
+
+        return personalidad_bagheera("✅ Empleado agregado correctamente")

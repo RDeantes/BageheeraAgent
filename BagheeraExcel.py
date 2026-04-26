@@ -74,3 +74,51 @@ def contrato_desde_excel(nombre, generar_contrato_func, personalidad_func):
     actualizar_vigencia(nombre, nueva_vigencia)
 
     return pdf
+
+
+# 🆔 OBTENER PRÓXIMO ID
+def obtener_proximo_id():
+    """Obtiene el ID del próximo empleado (máximo ID + 1)"""
+    df = pd.read_excel(RUTA)
+    df.columns = df.columns.str.strip().str.upper()
+    
+    # Si la tabla está vacía, comenzar con ID 1
+    if df.empty:
+        return 1
+    
+    # Obtener el máximo ID y sumarle 1
+    try:
+        max_id = pd.to_numeric(df['ID'], errors='coerce').max()
+        if pd.isna(max_id):
+            return 1
+        return int(max_id) + 1
+    except:
+        return 1
+
+
+# ➕ AGREGAR NUEVO EMPLEADO
+def agregar_empleado(empleado_data):
+    """Agrega un nuevo empleado al Excel"""
+    df = pd.read_excel(RUTA)
+    df.columns = df.columns.str.strip().str.upper()
+    
+    # Obtener próximo ID
+    proximo_id = obtener_proximo_id()
+    empleado_data['ID'] = proximo_id
+    
+    # Crear una fila nueva con los datos
+    nueva_fila = pd.DataFrame([empleado_data])
+    
+    # Asegurar que las columnas coincidan
+    for col in df.columns:
+        if col not in nueva_fila.columns:
+            nueva_fila[col] = ""
+    
+    # Reordenar las columnas de la nueva fila igual al DataFrame original
+    nueva_fila = nueva_fila[df.columns]
+    
+    # Concatenar y guardar
+    df = pd.concat([df, nueva_fila], ignore_index=True)
+    df.to_excel(RUTA, index=False)
+    
+    return proximo_id

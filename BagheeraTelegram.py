@@ -1,9 +1,12 @@
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
+import sys
+import os
 
 from BagheeraBrain import procesar
 
 print("BOT INICIADO")
+print("HOLA JEFA COMO PUEDO AYUDARTE HOY")
 
 
 # 🔑 TU TOKEN (pon el tuyo aquí)
@@ -17,6 +20,12 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mensaje_usuario = update.message.text
 
     print("MENSAJE RECIBIDO:", mensaje_usuario)
+
+    # 🔴 Si presiona ESC → rompe el ciclo y reinicia
+    if mensaje_usuario.upper() == "ESC":
+        await update.message.reply_text("🔄 Reiniciando el proceso...")
+        print("Reiniciando...")
+        os.execv(sys.executable, ['python'] + sys.argv)
 
     resultado = procesar(mensaje_usuario)
 

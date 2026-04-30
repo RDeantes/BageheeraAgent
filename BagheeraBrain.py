@@ -55,6 +55,7 @@ def procesar(mensaje):
     # 🌴 VACACIONES (tolerante)
     if "vacacion" in mensaje or "vacac" in mensaje:
         return revisar_vacaciones_por_mes(mensaje)
+    
 
     # 👤 AGREGAR EMPLEADO
     if "agregar empleado" in mensaje:
@@ -212,7 +213,7 @@ def generar_contrato(datos):
     return ruta_pdf
 
 
-#def revisar_vacaciones_por_mes(mensaje):
+def revisar_vacaciones_por_mes(mensaje):
     from google_sheets import get_sheet
     from datetime import datetime, timedelta
 

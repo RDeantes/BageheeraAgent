@@ -11,6 +11,8 @@ from BagheeraExcel import (
     agregar_empleado
 )
 
+
+
 # 🧠 MEMORIA GLOBAL
 estado_contrato = {}
 estado_empleado = {}

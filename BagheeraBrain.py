@@ -19,12 +19,26 @@ def personalidad_bagheera(respuesta):
 
 
 # =========================================================
+# 🔤 NORMALIZAR TEXTO (PRO)
+# =========================================================
+def normalizar(texto):
+    texto = texto.lower().strip()
+    reemplazos = {
+        "á": "a", "é": "e", "í": "i",
+        "ó": "o", "ú": "u"
+    }
+    for k, v in reemplazos.items():
+        texto = texto.replace(k, v)
+    return texto
+
+
+# =========================================================
 # 🎯 ROUTER PRINCIPAL
 # =========================================================
 def procesar(mensaje):
     global estado_contrato, estado_empleado
 
-    mensaje = mensaje.lower().strip()
+    mensaje = normalizar(mensaje)
 
     # 🔥 PRIORIDAD: EMPLEADO
     if estado_empleado.get("activo"):
@@ -34,20 +48,26 @@ def procesar(mensaje):
     if estado_contrato.get("activo"):
         return flujo_contrato(mensaje)
 
+    # =====================================================
     # COMANDOS
+    # =====================================================
+
+    # 🌴 VACACIONES (tolerante)
+    if "vacacion" in mensaje or "vacac" in mensaje:
+        return revisar_vacaciones_por_mes(mensaje)
+
+    # 👤 AGREGAR EMPLEADO
     if "agregar empleado" in mensaje:
         estado_contrato = {}
         estado_empleado = {"activo": True, "paso": 1}
         return personalidad_bagheera("Nombre del empleado:")
 
+    # 📄 NUEVO CONTRATO
     if "nuevo contrato" in mensaje:
         estado_empleado = {}
         estado_contrato = {"activo": True}
         return personalidad_bagheera("¿Tipo de contrato? (temporal / permanente)")
-# 🔥 VACACIONES
-    if "vacacion" in mensaje:
-        return revisar_vacaciones_por_mes(mensaje)
-  
+
     return personalidad_bagheera("No entendí la orden.")
 
 
@@ -93,7 +113,7 @@ def flujo_contrato(mensaje):
         estado_contrato["nombre"] = mensaje.upper()
 
         datos = estado_contrato.copy()
-        estado_contrato = {}  # 🔥 limpiar flujo
+        estado_contrato = {}
 
         return contrato_desde_excel(datos, generar_contrato, personalidad_bagheera)
 
@@ -162,13 +182,12 @@ def flujo_agregar_empleado(mensaje):
 
 
 # =========================================================
-# 📄 GENERAR CONTRATO (DOCX → PDF)
+# 📄 GENERAR CONTRATO
 # =========================================================
 def generar_contrato(datos):
     base_path = os.path.dirname(__file__)
 
-    archivo = "CONTRATO FORMATO TEMPORAL.docx"
-    plantilla = os.path.join(base_path, archivo)
+    plantilla = os.path.join(base_path, "CONTRATO FORMATO TEMPORAL.docx")
 
     doc = Document(plantilla)
 
@@ -192,30 +211,25 @@ def generar_contrato(datos):
 
     return ruta_pdf
 
+
+# =========================================================
+# 🌴 VACACIONES INTELIGENTE
+# =========================================================
 def revisar_vacaciones_por_mes(mensaje):
     from google_sheets import get_sheet
-    from BagheeraExcel import limpiar
 
     meses = {
-        "enero": "01",
-        "febrero": "02",
-        "marzo": "03",
-        "abril": "04",
-        "mayo": "05",
-        "junio": "06",
-        "julio": "07",
-        "agosto": "08",
-        "septiembre": "09",
-        "octubre": "10",
-        "noviembre": "11",
-        "diciembre": "12"
+        "enero": 1, "febrero": 2, "marzo": 3,
+        "abril": 4, "mayo": 5, "junio": 6,
+        "julio": 7, "agosto": 8, "septiembre": 9,
+        "octubre": 10, "noviembre": 11, "diciembre": 12
     }
 
     mes_detectado = None
 
-    for mes_texto, mes_num in meses.items():
-        if mes_texto in mensaje:
-            mes_detectado = mes_num
+    for mes, num in meses.items():
+        if mes in mensaje:
+            mes_detectado = num
             break
 
     if not mes_detectado:
@@ -227,17 +241,20 @@ def revisar_vacaciones_por_mes(mensaje):
     resultado = []
 
     for row in registros:
-        fecha = str(row.get("FECHA_INGRESO", ""))
+        fecha_texto = str(row.get("FECHA_INGRESO", ""))
 
-        if len(fecha) >= 7:
-            mes_ingreso = fecha[5:7]
+        try:
+            fecha = datetime.strptime(fecha_texto[:10], "%Y-%m-%d")
 
-            if mes_ingreso == mes_detectado:
+            if fecha.month == mes_detectado:
                 resultado.append(row.get("NOMBRE", ""))
+
+        except:
+            continue
 
     if not resultado:
         return personalidad_bagheera("No hay empleados con aniversario en ese mes")
 
-    lista = "\n".join(resultado)
-
-    return personalidad_bagheera(f"Empleados con aniversario en ese mes:\n\n{lista}")
+    return personalidad_bagheera(
+        "Empleados con aniversario:\n\n" + "\n".join(resultado)
+    )

@@ -1,7 +1,6 @@
 import unicodedata
 from datetime import datetime, timedelta
-from google_sheets import sheet
-
+from google_sheets import get_sheet
 
 # =========================================================
 # 🔤 LIMPIAR TEXTO
@@ -11,27 +10,26 @@ def limpiar(texto):
     texto = unicodedata.normalize('NFKD', texto).encode('ascii', 'ignore').decode('utf-8')
     return texto.strip()
 
-
 # =========================================================
 # 🔍 BUSCAR EMPLEADO
 # =========================================================
 def buscar_empleado(nombre):
-    nombre = limpiar(nombre)
+    sheet = get_sheet()
     registros = sheet.get_all_records()
+    nombre_limpio = limpiar(nombre)
 
-    # 🔥 match exacto primero
+    # 🔥 1. Match exacto
     for row in registros:
-        if limpiar(row["NOMBRE"]) == nombre:
+        if limpiar(row.get("NOMBRE", "")) == nombre_limpio:
             return row
 
-    # 🔥 match flexible
-    palabras = nombre.split()
-
+    # 🔥 2. Match por score
+    palabras = nombre_limpio.split()
     mejor = None
     mejor_score = 0
 
     for row in registros:
-        nombre_excel = limpiar(row["NOMBRE"])
+        nombre_excel = limpiar(row.get("NOMBRE", ""))
         score = sum(1 for p in palabras if p in nombre_excel)
 
         if score > mejor_score:
@@ -43,15 +41,16 @@ def buscar_empleado(nombre):
 
     return None
 
-
 # =========================================================
 # 🔄 ACTUALIZAR VIGENCIA
 # =========================================================
 def actualizar_vigencia(nombre, nueva_fecha):
+    sheet = get_sheet()
     registros = sheet.get_all_records()
 
     for i, row in enumerate(registros):
-        if limpiar(row["NOMBRE"]) == limpiar(nombre):
+        if limpiar(row.get("NOMBRE", "")) == limpiar(nombre):
+            # Columna 7 = VIGENCIA
             sheet.update_cell(i + 2, 7, str(nueva_fecha))
             print(f"✅ Vigencia actualizada: {nombre}")
             return True
@@ -59,27 +58,27 @@ def actualizar_vigencia(nombre, nueva_fecha):
     print("⚠️ No se encontró empleado para actualizar")
     return False
 
-
 # =========================================================
 # 🆔 OBTENER PRÓXIMO ID
 # =========================================================
 def obtener_proximo_id():
+    sheet = get_sheet()
     registros = sheet.get_all_records()
 
     if not registros:
         return 1
 
     try:
-        ids = [int(r["ID"]) for r in registros if str(r["ID"]).isdigit()]
+        ids = [int(r["ID"]) for r in registros if str(r.get("ID", "")).isdigit()]
         return max(ids) + 1 if ids else 1
     except:
         return 1
-
 
 # =========================================================
 # ➕ AGREGAR EMPLEADO
 # =========================================================
 def agregar_empleado(data):
+    sheet = get_sheet()
 
     nuevo_id = obtener_proximo_id()
 
@@ -100,14 +99,14 @@ def agregar_empleado(data):
     sheet.append_row(fila)
 
     print(f"✅ Empleado agregado ID: {nuevo_id}")
+    print(f"📊 FILA ENVIADA: {fila}")
+
     return nuevo_id
 
-
 # =========================================================
-# 🤖 CONTRATO DESDE EXCEL (AHORA SHEETS)
+# 🤖 CONTRATO DESDE SHEETS
 # =========================================================
 def contrato_desde_excel(nombre, generar_contrato_func, personalidad_func):
-
     persona = buscar_empleado(nombre)
 
     if persona is None:
@@ -122,17 +121,17 @@ def contrato_desde_excel(nombre, generar_contrato_func, personalidad_func):
         "duracion": "6 MESES",
         "fecha_inicio": hoy.strftime("%Y-%m-%d"),
         "fecha_termino": nueva_vigencia.strftime("%Y-%m-%d"),
-        "nombre": persona['NOMBRE'],
-        "nacionalidad": persona.get('NACIONALIDAD', ''),
-        "sexo": persona.get('SEXO', ''),
-        "curp": persona.get('CURP', ''),
-        "domicilio": persona.get('DOMICILIO', ''),
-        "puesto": persona.get('PUESTO', ''),
+        "nombre": persona.get("NOMBRE", ""),
+        "nacionalidad": persona.get("NACIONALIDAD", ""),
+        "sexo": persona.get("SEXO", ""),
+        "curp": persona.get("CURP", ""),
+        "domicilio": persona.get("DOMICILIO", ""),
+        "puesto": persona.get("PUESTO", ""),
         "dias": "LUNES A SABADO"
     }
 
     pdf = generar_contrato_func(datos)
 
-    actualizar_vigencia(persona['NOMBRE'], nueva_vigencia)
+    actualizar_vigencia(persona.get("NOMBRE", ""), nueva_vigencia)
 
     return pdf

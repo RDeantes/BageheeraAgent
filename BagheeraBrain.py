@@ -89,27 +89,27 @@ def flujo_contrato(mensaje):
 
     # JORNADA
     elif "jornada" not in estado_contrato:
-        estado_contrato["jornada"] = mensaje
+        estado_contrato["jornada"] = mensaje.upper()
         return personalidad_bagheera("Duración del contrato (ej: 3 MESES):")
 
     # DURACION
     elif "duracion" not in estado_contrato:
-        estado_contrato["duracion"] = mensaje
+        estado_contrato["duracion"] = mensaje.upper()
         return personalidad_bagheera("Fecha de inicio (YYYY-MM-DD):")
 
     # FECHA INICIO
     elif "fecha_inicio" not in estado_contrato:
-        estado_contrato["fecha_inicio"] = mensaje
+        estado_contrato["fecha_inicio"] = mensaje.upper()
         return personalidad_bagheera("Fecha de término (YYYY-MM-DD):")
 
     # FECHA TERMINO
     elif "fecha_termino" not in estado_contrato:
-        estado_contrato["fecha_termino"] = mensaje
+        estado_contrato["fecha_termino"] = mensaje.upper()
         return personalidad_bagheera("Nombre del empleado:")
 
     # NOMBRE
     elif "nombre" not in estado_contrato:
-        estado_contrato["nombre"] = mensaje
+        estado_contrato["nombre"] = mensaje.upper()
 
         datos = estado_contrato.copy()
         estado_contrato = {}

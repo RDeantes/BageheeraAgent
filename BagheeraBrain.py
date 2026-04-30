@@ -44,7 +44,10 @@ def procesar(mensaje):
         estado_empleado = {}
         estado_contrato = {"activo": True}
         return personalidad_bagheera("¿Tipo de contrato? (temporal / permanente)")
-
+# 🔥 VACACIONES
+    if "vacacion" in mensaje:
+        return revisar_vacaciones_por_mes(mensaje)
+  
     return personalidad_bagheera("No entendí la orden.")
 
 

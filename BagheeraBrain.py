@@ -279,7 +279,7 @@ def generar_contrato(datos):
 
     # 🔍 procesamiento real
     for row in registros:
-        fecha_raw = row.get("FECHA_INGRESO", "")
+        fecha_raw = row.get("FECHA_DE_INGRESO", "")
         fecha = parse_fecha(fecha_raw)
 
         if fecha:

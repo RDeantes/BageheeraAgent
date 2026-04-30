@@ -3,17 +3,13 @@ import subprocess
 from datetime import datetime
 from docx import Document
 
-from BagheeraExcel import (
-    contrato_desde_excel,
-    buscar_empleado,
-    actualizar_vigencia,
-    obtener_proximo_id,
-    agregar_empleado
-)
+from BagheeraExcel import contrato_desde_excel, agregar_empleado
+
 
 # 🧠 MEMORIA GLOBAL
 estado_contrato = {}
 estado_empleado = {}
+
 
 # =========================================================
 # 🐱 PERSONALIDAD
@@ -30,7 +26,7 @@ def procesar(mensaje):
 
     mensaje = mensaje.lower().strip()
 
-    # 🔥 PRIORIDAD: EMPLEADO (evita cruce de flujos)
+    # 🔥 PRIORIDAD: EMPLEADO
     if estado_empleado.get("activo"):
         return flujo_agregar_empleado(mensaje)
 
@@ -38,23 +34,14 @@ def procesar(mensaje):
     if estado_contrato.get("activo"):
         return flujo_contrato(mensaje)
 
-    # -----------------------------------------------------
     # COMANDOS
-    # -----------------------------------------------------
-
-    if "vencido" in mensaje:
-        return revisar_contratos_vencidos()
-
-    if "vacacion" in mensaje:
-        return revisar_vacaciones_por_mes(mensaje)
-
     if "agregar empleado" in mensaje:
-        estado_contrato = {}  # 🔥 limpiar contrato
+        estado_contrato = {}
         estado_empleado = {"activo": True, "paso": 1}
         return personalidad_bagheera("Nombre del empleado:")
 
     if "nuevo contrato" in mensaje:
-        estado_empleado = {}  # 🔥 limpiar empleado
+        estado_empleado = {}
         estado_contrato = {"activo": True}
         return personalidad_bagheera("¿Tipo de contrato? (temporal / permanente)")
 
@@ -103,9 +90,9 @@ def flujo_contrato(mensaje):
         estado_contrato["nombre"] = mensaje.upper()
 
         datos = estado_contrato.copy()
-        estado_contrato = {}  # 🔥 limpiar
+        estado_contrato = {}  # 🔥 limpiar flujo
 
-        return generar_contrato_desde_excel(datos)
+        return contrato_desde_excel(datos, generar_contrato, personalidad_bagheera)
 
 
 # =========================================================
@@ -166,18 +153,14 @@ def flujo_agregar_empleado(mensaje):
 
         agregar_empleado(estado_empleado)
 
-        estado_empleado = {}  # 🔥 limpiar flujo
+        estado_empleado = {}
 
         return personalidad_bagheera("✅ Empleado agregado correctamente")
 
 
 # =========================================================
-# 📄 GENERAR CONTRATO
+# 📄 GENERAR CONTRATO (DOCX → PDF)
 # =========================================================
-def generar_contrato_desde_excel(datos):
-    return contrato_desde_excel(datos["nombre"], generar_contrato, personalidad_bagheera)
-
-
 def generar_contrato(datos):
     base_path = os.path.dirname(__file__)
 
@@ -205,14 +188,3 @@ def generar_contrato(datos):
     ])
 
     return ruta_pdf
-
-
-# =========================================================
-# OTROS
-# =========================================================
-def revisar_contratos_vencidos():
-    return personalidad_bagheera("Función pendiente")
-
-
-def revisar_vacaciones_por_mes(mensaje):
-    return personalidad_bagheera("Función pendiente")

@@ -9,12 +9,12 @@ SCOPE = [
 ]
 
 def get_sheet():
-    creds_json = os.environ.get("GOOGLE_CREDS")
+    raw = os.environ.get("GOOGLE_CREDS")
 
-    if not creds_json:
-        raise Exception("❌ No existe GOOGLE_CREDS en Railway")
+    if not raw:
+        raise Exception("❌ Falta GOOGLE_CREDS en Railway")
 
-    creds_dict = json.loads(creds_json)
+    creds_dict = json.loads(raw)
 
     creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, SCOPE)
     client = gspread.authorize(creds)

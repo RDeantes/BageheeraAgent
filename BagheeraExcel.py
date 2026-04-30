@@ -1,10 +1,10 @@
 import unicodedata
-from datetime import datetime, timedelta
+from datetime import datetime
 from google_sheets import get_sheet
 
 
 # =========================================================
-# 🔤 LIMPIAR TEXTO
+# LIMPIAR TEXTO
 # =========================================================
 def limpiar(texto):
     texto = str(texto).lower()
@@ -13,7 +13,7 @@ def limpiar(texto):
 
 
 # =========================================================
-# 🔍 BUSCAR EMPLEADO
+# BUSCAR EMPLEADO (MATCH SEGURO)
 # =========================================================
 def buscar_empleado(nombre):
     sheet = get_sheet()
@@ -22,42 +22,32 @@ def buscar_empleado(nombre):
     nombre_limpio = limpiar(nombre)
     palabras_input = nombre_limpio.split()
 
-    # =========================================================
-    # 🔥 1. MATCH EXACTO (PRIORIDAD MÁXIMA)
-    # =========================================================
+    # EXACTO
     for row in registros:
-        nombre_excel = limpiar(row.get("NOMBRE", ""))
-        if nombre_excel == nombre_limpio:
+        if limpiar(row.get("NOMBRE", "")) == nombre_limpio:
             return row
 
-    # =========================================================
-    # 🔥 2. MATCH POR PALABRAS COMPLETAS (MÍNIMO 2)
-    # =========================================================
-    mejor_match = None
+    # POR COINCIDENCIAS (mínimo 2 palabras)
+    mejor = None
     mejor_score = 0
 
     for row in registros:
-        nombre_excel = limpiar(row.get("NOMBRE", ""))
-        palabras_excel = nombre_excel.split()
+        palabras_excel = limpiar(row.get("NOMBRE", "")).split()
 
-        # contar coincidencias reales (palabras completas)
-        coincidencias = sum(1 for p in palabras_input if p in palabras_excel)
+        score = sum(1 for p in palabras_input if p in palabras_excel)
 
-        if coincidencias > mejor_score:
-            mejor_score = coincidencias
-            mejor_match = row
+        if score > mejor_score:
+            mejor_score = score
+            mejor = row
 
-    # =========================================================
-    # 🔥 VALIDACIÓN FINAL
-    # =========================================================
     if mejor_score >= 2:
-        return mejor_match
+        return mejor
 
     return None
 
 
 # =========================================================
-# 🔄 ACTUALIZAR VIGENCIA
+# ACTUALIZAR VIGENCIA
 # =========================================================
 def actualizar_vigencia(nombre, nueva_fecha):
     sheet = get_sheet()
@@ -66,15 +56,14 @@ def actualizar_vigencia(nombre, nueva_fecha):
     for i, row in enumerate(registros):
         if limpiar(row.get("NOMBRE", "")) == limpiar(nombre):
             sheet.update_cell(i + 2, 7, str(nueva_fecha))
-            print(f"✅ Vigencia actualizada: {nombre}")
+            print("✅ Vigencia actualizada")
             return True
 
-    print("⚠️ No se encontró empleado")
     return False
 
 
 # =========================================================
-# 🆔 OBTENER ID
+# OBTENER ID
 # =========================================================
 def obtener_proximo_id():
     sheet = get_sheet()
@@ -83,15 +72,12 @@ def obtener_proximo_id():
     if not registros:
         return 1
 
-    try:
-        ids = [int(r["ID"]) for r in registros if str(r.get("ID", "")).isdigit()]
-        return max(ids) + 1 if ids else 1
-    except:
-        return 1
+    ids = [int(r["ID"]) for r in registros if str(r.get("ID", "")).isdigit()]
+    return max(ids) + 1 if ids else 1
 
 
 # =========================================================
-# ➕ AGREGAR EMPLEADO
+# AGREGAR EMPLEADO
 # =========================================================
 def agregar_empleado(data):
     sheet = get_sheet()
@@ -114,29 +100,26 @@ def agregar_empleado(data):
 
     sheet.append_row(fila)
 
-    print("✅ GUARDADO EN GOOGLE SHEETS:", fila)
+    print("✅ GUARDADO:", fila)
     return nuevo_id
 
 
 # =========================================================
-# 📄 CONTRATO
+# CONTRATO DESDE SHEETS (FIX COMPLETO)
 # =========================================================
-def contrato_desde_excel(nombre, generar_contrato_func, personalidad_func):
+def contrato_desde_excel(datos, generar_contrato_func, personalidad_func):
 
-    persona = buscar_empleado(nombre)
+    persona = buscar_empleado(datos["nombre"])
 
     if persona is None:
         return personalidad_func("❌ No encontré al empleado")
 
-    hoy = datetime.now()
-    nueva_vigencia = hoy + timedelta(days=180)
-
-    datos = {
-         "tipo": datos.get("tipo", ""),
+    datos_finales = {
+        "tipo": datos.get("tipo", ""),
         "jornada": datos.get("jornada", ""),
-        "duracion": datos.get("duracion", ""),  # 🔥 FIX
-        "fecha_inicio": hoy.strftime("%Y-%m-%d"),
-        "fecha_termino": nueva_vigencia.strftime("%Y-%m-%d"),
+        "duracion": datos.get("duracion", ""),  # 🔥 YA RESPETA INPUT
+        "fecha_inicio": datos.get("fecha_inicio", ""),
+        "fecha_termino": datos.get("fecha_termino", ""),
         "nombre": persona.get("NOMBRE", ""),
         "nacionalidad": persona.get("NACIONALIDAD", ""),
         "sexo": persona.get("SEXO", ""),
@@ -146,8 +129,8 @@ def contrato_desde_excel(nombre, generar_contrato_func, personalidad_func):
         "dias": "LUNES A SABADO"
     }
 
-    pdf = generar_contrato_func(datos)
+    pdf = generar_contrato_func(datos_finales)
 
-    actualizar_vigencia(persona.get("NOMBRE", ""), nueva_vigencia)
+    actualizar_vigencia(persona.get("NOMBRE", ""), datos_finales["fecha_termino"])
 
     return pdf

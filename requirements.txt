@@ -3,3 +3,5 @@ python-telegram-bot
 python-docx
 docx2pdf
 openpyxl
+gspread
+oauth2client

@@ -5,5 +5,4 @@ docx2pdf
 openpyxl
 gspread
 oauth2client
-gspread
-oauth2client
+

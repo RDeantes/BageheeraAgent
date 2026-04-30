@@ -20,27 +20,38 @@ def buscar_empleado(nombre):
     registros = sheet.get_all_records()
 
     nombre_limpio = limpiar(nombre)
+    palabras_input = nombre_limpio.split()
 
-    # 🔥 match exacto
+    # =========================================================
+    # 🔥 1. MATCH EXACTO (PRIORIDAD MÁXIMA)
+    # =========================================================
     for row in registros:
-        if limpiar(row.get("NOMBRE", "")) == nombre_limpio:
+        nombre_excel = limpiar(row.get("NOMBRE", ""))
+        if nombre_excel == nombre_limpio:
             return row
 
-    # 🔥 match por coincidencias
-    palabras = nombre_limpio.split()
-    mejor = None
+    # =========================================================
+    # 🔥 2. MATCH POR PALABRAS COMPLETAS (MÍNIMO 2)
+    # =========================================================
+    mejor_match = None
     mejor_score = 0
 
     for row in registros:
         nombre_excel = limpiar(row.get("NOMBRE", ""))
-        score = sum(1 for p in palabras if p in nombre_excel)
+        palabras_excel = nombre_excel.split()
 
-        if score > mejor_score:
-            mejor_score = score
-            mejor = row
+        # contar coincidencias reales (palabras completas)
+        coincidencias = sum(1 for p in palabras_input if p in palabras_excel)
 
+        if coincidencias > mejor_score:
+            mejor_score = coincidencias
+            mejor_match = row
+
+    # =========================================================
+    # 🔥 VALIDACIÓN FINAL
+    # =========================================================
     if mejor_score >= 2:
-        return mejor
+        return mejor_match
 
     return None
 

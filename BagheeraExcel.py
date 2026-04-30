@@ -132,9 +132,9 @@ def contrato_desde_excel(nombre, generar_contrato_func, personalidad_func):
     nueva_vigencia = hoy + timedelta(days=180)
 
     datos = {
-        "tipo": "TEMPORAL",
-        "jornada": "COMPLETA",
-        "duracion": "6 MESES",
+         "tipo": datos.get("tipo", ""),
+        "jornada": datos.get("jornada", ""),
+        "duracion": datos.get("duracion", ""),  # 🔥 FIX
         "fecha_inicio": hoy.strftime("%Y-%m-%d"),
         "fecha_termino": nueva_vigencia.strftime("%Y-%m-%d"),
         "nombre": persona.get("NOMBRE", ""),

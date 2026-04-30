@@ -212,11 +212,9 @@ def generar_contrato(datos):
     return ruta_pdf
 
 
-# =========================================================
-# 🌴 VACACIONES INTELIGENTE
-# =========================================================
-def revisar_vacaciones_por_mes(mensaje):
+#def revisar_vacaciones_por_mes(mensaje):
     from google_sheets import get_sheet
+    from datetime import datetime, timedelta
 
     meses = {
         "enero": 1, "febrero": 2, "marzo": 3,
@@ -240,17 +238,53 @@ def revisar_vacaciones_por_mes(mensaje):
 
     resultado = []
 
-    for row in registros:
-        fecha_texto = str(row.get("FECHA_INGRESO", ""))
+    # 🔥 función robusta de parseo
+    def parse_fecha(valor):
+        if not valor:
+            return None
 
+        # caso datetime real
+        if isinstance(valor, datetime):
+            return valor
+
+        texto = str(valor).strip()
+
+        # 🔥 limpiar formato tipo ISO
+        if "T" in texto:
+            texto = texto.split("T")[0]
+
+        # intentar formatos comunes
+        formatos = [
+            "%Y-%m-%d",
+            "%d/%m/%Y",
+            "%m/%d/%Y",
+            "%d-%m-%Y"
+        ]
+
+        for f in formatos:
+            try:
+                return datetime.strptime(texto, f)
+            except:
+                continue
+
+        # 🔥 caso número (Excel serial date)
         try:
-            fecha = datetime.strptime(fecha_texto[:10], "%Y-%m-%d")
+            num = float(texto)
+            base = datetime(1899, 12, 30)
+            return base + timedelta(days=num)
+        except:
+            pass
 
+        return None
+
+    # 🔍 procesamiento real
+    for row in registros:
+        fecha_raw = row.get("FECHA_INGRESO", "")
+        fecha = parse_fecha(fecha_raw)
+
+        if fecha:
             if fecha.month == mes_detectado:
                 resultado.append(row.get("NOMBRE", ""))
-
-        except:
-            continue
 
     if not resultado:
         return personalidad_bagheera("No hay empleados con aniversario en ese mes")

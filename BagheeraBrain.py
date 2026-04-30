@@ -188,3 +188,53 @@ def generar_contrato(datos):
     ])
 
     return ruta_pdf
+
+def revisar_vacaciones_por_mes(mensaje):
+    from google_sheets import get_sheet
+    from BagheeraExcel import limpiar
+
+    meses = {
+        "enero": "01",
+        "febrero": "02",
+        "marzo": "03",
+        "abril": "04",
+        "mayo": "05",
+        "junio": "06",
+        "julio": "07",
+        "agosto": "08",
+        "septiembre": "09",
+        "octubre": "10",
+        "noviembre": "11",
+        "diciembre": "12"
+    }
+
+    mes_detectado = None
+
+    for mes_texto, mes_num in meses.items():
+        if mes_texto in mensaje:
+            mes_detectado = mes_num
+            break
+
+    if not mes_detectado:
+        return personalidad_bagheera("❌ Mes no válido")
+
+    sheet = get_sheet()
+    registros = sheet.get_all_records()
+
+    resultado = []
+
+    for row in registros:
+        fecha = str(row.get("FECHA_INGRESO", ""))
+
+        if len(fecha) >= 7:
+            mes_ingreso = fecha[5:7]
+
+            if mes_ingreso == mes_detectado:
+                resultado.append(row.get("NOMBRE", ""))
+
+    if not resultado:
+        return personalidad_bagheera("No hay empleados con aniversario en ese mes")
+
+    lista = "\n".join(resultado)
+
+    return personalidad_bagheera(f"Empleados con aniversario en ese mes:\n\n{lista}")

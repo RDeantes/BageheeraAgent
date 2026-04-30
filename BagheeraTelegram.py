@@ -60,13 +60,22 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⚠️ Ocurrió un error")
 
 
+
 # =========================================================
 # 🚀 INICIAR BOT
 # =========================================================
+async def error_handler(update, context):
+    print("❌ ERROR DETECTADO:")
+    print(context.error)
+
+
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, responder))
+
+    # 🔥 AGREGAR HANDLER DE ERRORES
+    app.add_error_handler(error_handler)
 
     print("Bagheera está corriendo...")
 

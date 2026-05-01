@@ -10,7 +10,7 @@ print("HOLA JEFA COMO PUEDO AYUDARTE HOY")
 
 
 # 🔑 TU TOKEN (pon el tuyo aquí)
-TOKEN = "8614896779:AAEQTEffYyNIBN7OBnTij8qFfexqy_02aLQ"
+TOKEN = "8614896779:AAGUawkf0Vh29uAzBHBGSirlDLhxzINRmMg"
 
 
 # =========================================================

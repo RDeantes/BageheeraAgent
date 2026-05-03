@@ -5,4 +5,6 @@ docx2pdf
 openpyxl
 gspread
 oauth2client
+fastapi
+uvicorn
 

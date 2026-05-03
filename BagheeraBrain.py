@@ -293,3 +293,23 @@ def revisar_vacaciones_por_mes(mensaje):
     return personalidad_bagheera(
         "Empleados con aniversario:\n\n" + "\n".join(resultado)
     )
+    
+def generar_contrato_directo(nombre, fecha_inicio, fecha_termino):
+
+    datos = {
+        "tipo": "TEMPORAL",  # puedes hacerlo dinámico luego
+        "jornada": "COMPLETA",
+        "duracion": "RENOVACIÓN",
+        "fecha_inicio": fecha_inicio,
+        "fecha_termino": fecha_termino,
+        "nombre": nombre
+    }
+
+    return contrato_desde_excel(
+        datos,
+        generar_contrato,
+        personalidad_bagheera
+        
+        
+        
+    )

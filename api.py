@@ -3,6 +3,10 @@ from BagheeraBrain import generar_contrato_directo
 
 app = FastAPI()
 
+@app.get("/")
+def root():
+    return {"status": "Bagheera API activa 🐱"}
+
 @app.post("/contrato")
 def generar(data: dict):
 

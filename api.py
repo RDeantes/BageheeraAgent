@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from BagheeraBrain import generar_contrato_automatico
+from BagheeraBrain import generar_contrato_directo
 
 app = FastAPI()
 
@@ -10,7 +10,7 @@ def root():
 @app.post("/contrato")
 def generar(data: dict):
 
-    archivo = generar_contrato_automatico(
+    archivo = generar_contrato_directo(
         data["nombre"],
         data["fecha_inicio"],
         data["fecha_termino"]
